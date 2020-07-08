@@ -1,0 +1,186 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+Read in required packages
+
+```{r}
+library(ggplot2)
+library(dplyr)
+```
+
+
+Read in CSVs for graph and to tally tiles for each satellite
+```{r}
+graph_s2<- read.csv("Z:\\Brittany\\Documents\\ProjectWork\\Data_Avail_CSV\\tally_S2_dataavail.csv")
+graph_L8<- read.csv("Z:\\Brittany\\Documents\\ProjectWork\\Data_Avail_CSV\\tally_L8_dataavail.csv") %>%
+  filter(Cloud.Cover <= 50)
+```
+
+Create S2 data availability graph
+```{r}
+ggplot(graph_s2) +
+  geom_tile(aes(x = Doy, y = Year, fill = Cloud.Cover), width = 1.5, size = 0.5) +
+  scale_y_continuous(breaks = c(2015:2018))  + 
+  scale_x_discrete(breaks = c("0", "100", "200", "300"))  + 
+  ggtitle("Sentinel-2 Satellite Cloud Cover for California Lakes") + 
+  ylab("Year") + 
+  xlab("Day of Year") + theme_bw() + scale_fill_continuous(type = "viridis")
+```
+Overall tally for Sentinel 2
+```{r}
+graph_s2%>%
+  group_by(Year, Month, tileid) %>%
+  tally()
+```
+
+Create bins for 0-50% cloud cover by 10% increments
+```{r}
+mylabels<- c("0-10", "10-20", "20-30", "30-40", "40-50")
+bins_s2 <- graph_s2%>%
+  mutate(Cloud_Range = cut(Cloud.Cover, breaks = c(-0.001,10,20,30,40,50) , labels = mylabels)) %>%
+  dplyr::select(c("title", "Cloud.Cover", "tileid", "Year", "Month", "Cloud_Range"))
+###Note that breaks begin with -0.001; it is because it would leave "NA" for all 0 values
+bins_s2
+```
+
+Tally for all bin values for S2
+```{r}
+bins_s2 %>%
+  group_by(Year, Month, tileid, Cloud_Range) %>%
+  tally()
+```
+Tally for cloud cover ranging 0-10%: S2
+```{r}
+less_10S2<- bins_s2 %>%
+  filter(Cloud_Range == "0-10")
+less_10S2 %>%
+  group_by(Year, Month, tileid, Cloud.Cover) %>%
+  tally()
+```
+
+Tally for range from 10.01-20%: S2
+```{r}
+from10_20s2<- bins_s2 %>%
+  filter(Cloud_Range == "10-20")
+from10_20s2 %>%
+  group_by(Year, Month, tileid, Cloud.Cover) %>%
+  tally()
+```
+
+Tally for range from 20.01-30%: L8
+```{r}
+from_20to30s2<- bins_s2 %>%
+  filter(Cloud_Range == "20-30")
+
+from_20to30s2 %>%
+  group_by(Year, Month, tileid, Cloud.Cover) %>%
+  tally()
+```
+
+Tally for range from 30.01-40%: S2
+```{r}
+from_30to40s2<- bins_s2 %>%
+  filter(Cloud_Range == "30-40")
+
+from_30to40s2 %>%
+  group_by(Year, Month, tileid, Cloud.Cover) %>%
+  tally()
+```
+
+Tally for range from 40.01-50%: S2
+```{r}
+from_40to50s2<- bins_s2 %>%
+  filter(Cloud_Range == "40-50")
+
+from_40to50s2 %>%
+  group_by(Year, Month, tileid, Cloud.Cover) %>%
+  tally()
+```
+
+
+
+Create L8 data availability graph
+```{r}
+ggplot(graph_L8) +
+  geom_tile(aes(x = Doy, y = Year, fill = Cloud.Cover), width = 1.5, size = 0.5) +
+  scale_y_continuous(breaks = c(2015:2018))  + 
+  scale_x_discrete(breaks = c("0", "100", "200", "300"))  + 
+  ggtitle("Landsat-8 Satellite Cloud Cover for California Lakes") + 
+  ylab("Year") + 
+  xlab("Day of Year") + theme_bw() + scale_fill_continuous(type = "viridis")
+```
+
+Overall tally for Landsat 8 
+```{r}
+graph_L8%>%
+  group_by(Year, Month, Path_Row) %>%
+  tally()
+```
+
+Create bins for 0-50% cloud cover by 10% increments
+```{r}
+mylabels<- c("0-10", "10-20", "20-30", "30-40", "40-50")
+bins_l8 <- graph_L8%>%
+  mutate(Cloud_Range = cut(Cloud.Cover, breaks = c(-0.001,10,20,30,40,50) , labels = mylabels)) %>%
+  dplyr::select(c("path", "row", "landsat_product_id", "Cloud.Cover", "Path_Row", "Year", "Month", "Cloud_Range"))
+###Note that breaks begin with -0.001; it is because it would leave "NA" for all 0 values
+bins_l8 
+```
+
+Tally for all bin values
+```{r}
+bins_l8 %>%
+  group_by(Year, Month, Path_Row, Cloud_Range) %>%
+  tally()
+```
+Tally for cloud cover ranging 0-10%
+```{r}
+less_10<- bins_l8 %>%
+  filter(Cloud_Range == "0-10")
+less_10 %>%
+  group_by(Year, Month, Path_Row, Cloud.Cover) %>%
+  tally()
+```
+
+Tally for range from 10.01-20%: L8
+```{r}
+from10_20<- bins_l8 %>%
+  filter(Cloud_Range == "10-20")
+from10_20 %>%
+  group_by(Year, Month, Path_Row, Cloud.Cover) %>%
+  tally()
+```
+
+Tally for range from 20.01-30%: L8
+```{r}
+from_20to30<- bins_l8 %>%
+  filter(Cloud_Range == "20-30")
+
+from_20to30 %>%
+  group_by(Year, Month, Path_Row, Cloud.Cover) %>%
+  tally()
+```
+
+Tally for range from 30.01-40%: L8
+```{r}
+from_30to40<- bins_l8 %>%
+  filter(Cloud_Range == "30-40")
+
+from_30to40 %>%
+  group_by(Year, Month, Path_Row, Cloud.Cover) %>%
+  tally()
+```
+
+Tally for range from 40.01-50%: L8
+```{r}
+from_40to50<- bins_l8 %>%
+  filter(Cloud_Range == "40-50")
+
+from_40to50 %>%
+  group_by(Year, Month, Path_Row, Cloud.Cover) %>%
+  tally()
+```

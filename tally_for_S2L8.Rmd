@@ -1,0 +1,101 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Read in CSV data for tiles that will be used
+```{r}
+S2_data<- read.csv("Z:\\Brittany\\Documents\\ProjectWork\\Ancillary\\s2_alltiles_query.csv")
+L8_data<- read.csv("Z:\\Brittany\\Documents\\ProjectWork\\Ancillary\\all_L8_tiles.csv") %>%
+  filter(SceneCloudCover <= 50)
+```
+this is a chunk
+
+Determine unique values for S2
+```{r error= TRUE}
+query2<- S2_data %>%
+    filter(cloudcoverpercentage <= 50) %>%
+    mutate(acquisitionDate = ymd_hms(gsub("T","",datatakesensingstart)),
+           Year = year(acquisitionDate),
+           Month = month(acquisitionDate),
+           uniq_ID = paste(acquisitionDate, tileid))
+unique(query2$uniq_ID)
+uniq_sen2<- query2[!duplicated(query2$uniq_ID),]
+uniq_sen2
+```
+
+Prepare/tidy data to create data availability graph for S2
+```{r}
+sent_graph<- uniq_sen2%>%
+  rename(Cloud.Cover = cloudcoverpercentage) %>%
+  mutate(Doy = as.factor(strftime(acquisitionDate, format = "%j")))
+##Check data
+sent_graph
+```
+
+Write CSV
+```{r}
+write.csv(sent_graph, "Z:\\Brittany\\Documents\\ProjectWork\\Ancillary\\tally_S2_dataavail.csv")
+```
+
+Plot data availability for Sentinel 2 for CA lakes
+```{r}
+ggplot(sent_graph) +
+  geom_tile(aes(x = Doy, y = Year, fill = Cloud.Cover), width = 1.5, size = 0.5) +
+  scale_y_continuous(breaks = c(2015:2018))  + 
+  scale_x_discrete(breaks = c("0", "100", "200", "300"))  + 
+  ggtitle("Sentinel-2 Satellite Cloud Cover for California Lakes") + 
+  ylab("Year") + 
+  xlab("Day of Year") + theme_bw() + scale_fill_continuous(type = "viridis")
+```
+
+Look at availability for each tile for Sentinel-2 by year and month
+
+```{r}
+sent_graph%>%
+  group_by(Year, Month, tileid) %>%
+  tally()
+```
+
+Determine unique values for L8
+```{r}
+uniq_l8<- L8_data[!duplicated(L8_data$displayId),] 
+uniq_l8
+
+#total 3464
+```
+
+Prepare/tidy data to create data availability graph for L8
+```{r}
+l8_graph<- uniq_l8%>%
+  rename(Cloud.Cover = SceneCloudCover) %>%
+  mutate(Doy = as.factor(strftime(acquisitionDate, format = "%j")),
+         Year = year(acquisitionDate),
+         Month = month(acquisitionDate),
+         Path_Row = paste(WRSPath, WRSRow, sep = "_"))
+##Check data
+l8_graph 
+```
+
+Write CSV
+```{r}
+write.csv(l8_graph, "Z:\\Brittany\\Documents\\ProjectWork\\Data_Avail_CSV\\tally_L8_dataavail.csv")
+```
+
+Plot data availability for L8 for CA lakes
+```{r}
+ggplot(l8_graph) +
+  geom_tile(aes(x = Doy, y = Year, fill = Cloud.Cover), width = 1.5, size = 0.5) +
+  scale_y_continuous(breaks = c(2015:2018))  + 
+  scale_x_discrete(breaks = c("0", "100", "200", "300"))  + 
+  ggtitle("Landsat-8 Satellite Cloud Cover for California Lakes") + 
+  ylab("Year") + 
+  xlab("Day of Year") + theme_bw() + scale_fill_continuous(type = "viridis")
+```
+
+Look at availability for each tile for Sentinel-2 by year and month
+```{r}
+l8_graph%>%
+  group_by(Year, Month, Path_Row) %>%
+  tally()
+```
