@@ -9,7 +9,7 @@ S2_data<- read.csv("Z:\\Brittany\\Documents\\ProjectWork\\Ancillary\\s2_alltiles
 L8_data<- read.csv("Z:\\Brittany\\Documents\\ProjectWork\\Ancillary\\all_L8_tiles.csv") %>%
   filter(SceneCloudCover <= 50)
 ```
-this is a chunk
+this is a chunk yup
 
 Determine unique values for S2
 ```{r error= TRUE}
